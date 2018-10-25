@@ -1,6 +1,8 @@
 function initialize() {
-    const remoteStorage = new RemoteStorage();
-    const widget = new Widget(remoteStorage);
+    const CHUNK_SIZE = 2 * 256 * 1024,
+        remoteStorage = new RemoteStorage(),
+        widget = new Widget(remoteStorage);
+
     remoteStorage.access.claim('shares', 'rw');
     widget.attach('remotestorage-widget');
 
@@ -21,8 +23,8 @@ function initialize() {
     }
 
     function getFileURL(fileName) {
-        const url = shares.getItemURL(fileName)
-        const div = document.getElementById('images');
+        const url = shares.getItemURL(fileName),
+            div = document.getElementById('images');
         let img = new Image();
         img.onload = () => {
             div.appendChild(img);
@@ -30,27 +32,40 @@ function initialize() {
         img.src = url;
     }
 
-    var fileElement= document.querySelector('input[type="file"]');
-    fileElement.addEventListener('change', function(evt){
-        // Create object
-        var reader= new ChunkedFileReader();
+    const fileElement= document.querySelector('input[type="file"]');
+    fileElement.addEventListener('change', function (evt) {
+        const file = evt.target.files[0],
+            fileSize = file.size,
+            reader = new ChunkedFileReader({maxChunkSize: CHUNK_SIZE});
+            md5 = SparkMD5.ArrayBuffer.hash(file);
+        let lastByte = 0;
+        console.log('---');
+        console.log('File info: ', file);
 
-        // Subscribe event listeners
-        reader.subscribe('begin', function(evt){
+        function printHttpHeader(chunkSize) {
+            const thisByte = lastByte + chunkSize;
+            console.log(`X-Content-ID: ${md5}`)
+            console.log(`X-Content-Range: bytes ${lastByte}-${thisByte}/${fileSize}`);
+            console.log(`Content-Type: ${file.type}`);
+            console.log('');
+            lastByte = thisByte;
+        }
+
+        reader.subscribe('begin', function () {
             console.log('Start reading');
         });
-        reader.subscribe('progress', function(evt){
-            console.log('Progress ' + evt.done + ' / ' + evt.nchunks + ' chunks (' + (evt.done_ratio * 100).toFixed(2) + '%)');
+        reader.subscribe('progress', function(data){
+            console.log(`Progress ${data.done} / ${data.nchunks} chunks (${(data.done_ratio * 100).toFixed(2)}%)`);
         });
-        reader.subscribe('chunk', function(evt){
-            //console.log('Read chunk: ' + new Uint8Array(evt.chunk));
-            console.log('Read chunk: ', evt.chunk);
+        reader.subscribe('chunk', function (data) {
+            // new Uint8Array(evt.chunk));
+            console.log(`Read chunk: ${data.chunk.byteLength}`, data.chunk);
+            printHttpHeader(data.chunk.byteLength);
         });
-        reader.subscribe('end', function(evt){
-            console.log('Done reading', evt);
+        reader.subscribe('end', function () {
+            console.log('Done reading');
         });
 
-        // Read it!
-        reader.readChunks(evt.target.files[0]);
+        reader.readChunks(file);
     });
 }
