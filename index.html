@@ -1,0 +1,69 @@
+<html>
+<head>
+    <title>Chunked File Transfer Demo</title>
+    <script src="node_modules/remotestoragejs/release/remotestorage.js"></script>
+    <script src="node_modules/remotestorage-widget/build/widget.js"></script>
+    <script src="node_modules/spark-md5/spark-md5.js"></script>
+    <script src="node_modules/chunked-file-reader/chunked-file-reader.js"></script>
+    <script src="index.js"></script>
+    <style>
+        .file-container {
+            display: block;
+            overflow: hidden;
+            position: relative;
+            background: lightblue;
+            border-radius: .5em;
+            float: left;
+            padding: .5em;
+            height: 50px;
+            width: 160px;
+            text-align: center;
+        }
+
+        .file-container [type=file] {
+            cursor: pointer;
+            display: block;
+            background-color: green;
+            filter: alpha(opacity=0);
+            min-height: 40px;
+            min-width: 80px;
+            opacity: 0;
+            text-align: right;
+        }
+
+        .file-container p {
+            font-size: 1em;
+            font-weight: bold;
+        }
+
+        #content {
+            display: grid;
+            grid-template-columns: 1fr;
+            grid-gap: 1em;
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>Chunked File Transfer Demo</h1>
+    <div id="remotestorage-widget"></div>
+    <div id="content">
+        <div id="form">
+            <label class="file-container">
+                <p>Select file to upload</p>
+                <input id="file-select" type="file">
+            </label>
+        </div>
+        <div id="images">
+
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        window.onload = () => {
+            initialize();
+        }
+    </script>
+</body>
+</html>
