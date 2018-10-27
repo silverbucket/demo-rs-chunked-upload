@@ -1,6 +1,6 @@
 function initialize() {
     const CHUNK_SIZE = 2 * 256 * 1024,
-        remoteStorage = new RemoteStorage(),
+        remoteStorage = new RemoteStorage({cache: false}),
         widget = new Widget(remoteStorage);
 
     remoteStorage.access.claim('shares', 'rw');
@@ -16,8 +16,17 @@ function initialize() {
         if (fileName) {
             return getFileURL(fileName);
         } else {
-            shares.getListing().then((listing) => {
-                Object.keys(listing).reverse().forEach(getFileURL);
+            shares.getListing().then(listing => {
+                Object.keys(listing)
+                      .filter(i => {
+                          return listing[i]['Content-Type'] && listing[i]['Content-Type'].match(/^image/)
+                      })
+                      .sort((a,b) => {
+                          return listing[a]['Content-Length'] - listing[b]['Content-Length']
+                      })
+                      .reverse()
+                      .slice(0, 5)
+                      .forEach(getFileURL);
             });
         }
     }
