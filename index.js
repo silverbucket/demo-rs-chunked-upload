@@ -51,9 +51,10 @@ function initialize() {
         console.log('---');
         console.log('File info: ', file);
 
-        function printHttpHeader(chunkSize) {
+        function printHttpHeader(chunkSize, chunkMd5) {
             const thisByte = lastByte + chunkSize;
             console.log(`X-Content-ID: ${md5}`)
+            console.log(`X-Content-Range-ID: ${chunkMd5}`);
             console.log(`X-Content-Range: bytes ${lastByte}-${thisByte}/${fileSize}`);
             console.log(`Content-Type: ${file.type}`);
             console.log('');
@@ -69,7 +70,7 @@ function initialize() {
         reader.subscribe('chunk', function (data) {
             // new Uint8Array(evt.chunk));
             console.log(`Read chunk: ${data.chunk.byteLength}`, data.chunk);
-            printHttpHeader(data.chunk.byteLength);
+            printHttpHeader(data.chunk.byteLength, SparkMD5.ArrayBuffer.hash(data.chunk));
         });
         reader.subscribe('end', function () {
             console.log('Done reading');
